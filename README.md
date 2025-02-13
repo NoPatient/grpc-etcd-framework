@@ -74,3 +74,18 @@ Logic summary:
 3. Threshold Reached: If failures exceed failureThreshold, the state changes to Open (requests are blocked). 
 4. Timeout Elapses: After openTimeout, the state changes to HalfOpen (limited requests are allowed). 
 5. Recovery: If a request succeeds in HalfOpen, the state returns to Closed. If it fails, the state goes back to Open.
+
+# v1.3.0
+Add rate limiter for server.
+
+A rate limiter is a mechanism used to control the rate of requests or operations
+in a system. It ensures that a service or resource is not overwhelmed by too many
+requests in a short period, which cloud lead to performance degradation
+or even failure.
+
+Key concepts of rate limiting:
+* Rate: The number of requests allowed per unit of time (e.g. 100 requests per second)
+* Burst: The maximum number of requests that can be allowed in a short burst, even if they exceed the rate temporarily
+* Throttling: The process of rejecting or delaying requests that exceed the allowed rate.
+
+In this project, we use `golang.org/x/time/rate` as the rate limiter directly.
