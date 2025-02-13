@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"grpc-etcd-framework/cfg"
 	pb "grpc-etcd-framework/gen/go/v1"
 	"grpc-etcd-framework/registry"
@@ -12,9 +15,19 @@ import (
 
 type server struct {
 	pb.UnimplementedHelloServiceServer
+	limiter *rate.Limiter
 }
 
-func (*server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
+func newServer() *server {
+	return &server{
+		limiter: rate.NewLimiter(rate.Limit(cfg.ServiceLimiterThreshold), cfg.ServiceLimiterThreshold),
+	}
+}
+
+func (s *server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
+	if !s.limiter.Allow() {
+		return nil, status.Errorf(codes.ResourceExhausted, "rate limited")
+	}
 	return &pb.HelloResponse{
 		Message: "Hello " + req.Name,
 	}, nil
@@ -27,7 +40,7 @@ func startServer(reg *registry.Registry) {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterHelloServiceServer(s, &server{})
+	pb.RegisterHelloServiceServer(s, newServer())
 
 	log.Printf("server listening at %v", lis.Addr())
 

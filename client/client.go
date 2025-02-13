@@ -74,7 +74,7 @@ func getServiceAddresses() []string {
 		log.Fatalf("failed to new registry: %v", err)
 	}
 
-	addrs, err := reg.Discover(cfg.SERVICENAME)
+	addrs, err := reg.Discover(cfg.ServiceName)
 	if err != nil {
 		log.Fatalf("failed to discover service:	%v", err)
 	}
