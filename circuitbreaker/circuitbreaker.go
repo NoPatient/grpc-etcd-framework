@@ -1,6 +1,7 @@
 package circuitbreaker
 
 import (
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -40,11 +41,17 @@ func (c *CircuitBreaker) Allow() bool {
 	case Open:
 		if time.Since(c.lastFailureTime) > c.openTimeout {
 			c.state = HalfOpen
-			return true
+			if rand.Float32() < 0.5 {
+				return true
+			}
+			return false
 		}
 		return false
 	case HalfOpen:
-		return true
+		if rand.Float32() < 0.5 {
+			return true
+		}
+		return false
 	default:
 		return false
 	}
