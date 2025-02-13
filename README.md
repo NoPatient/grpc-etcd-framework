@@ -54,3 +54,23 @@ List all key valur pairs in etcd.
 ```shell
 etcdctl --endpoints=http://localhost:2379 get --prefix ""
 ```
+
+
+# v1.2.0
+Add circuit breaker for client.
+
+Circuit breaker is a design pattern used to detect failures and 
+prevent an application from repeatedly trying to execute an operation
+that's likely to fail.
+
+The circuit breaker has three states:
+1. Closed: The system is operating normally, and requests are allowed.
+2. Open: The system has detected too many failures, and requests are blocked.
+3. HalfOpen: The system is testing whether the underlying issue has been resolved by allowing a limited number of requests.
+
+Logic summary:
+1. Initial State: Closed (requests are allowed).
+2. Failures Occur: Each failure increments the failure count. 
+3. Threshold Reached: If failures exceed failureThreshold, the state changes to Open (requests are blocked). 
+4. Timeout Elapses: After openTimeout, the state changes to HalfOpen (limited requests are allowed). 
+5. Recovery: If a request succeeds in HalfOpen, the state returns to Closed. If it fails, the state goes back to Open.
