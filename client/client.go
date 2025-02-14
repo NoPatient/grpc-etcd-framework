@@ -4,6 +4,7 @@ import (
 	"context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"grpc-etcd-framework/balancer"
 	"grpc-etcd-framework/cfg"
 	"grpc-etcd-framework/circuitbreaker"
 	pb "grpc-etcd-framework/gen/go/v1"
@@ -12,32 +13,14 @@ import (
 	"time"
 )
 
-func callSayHello(serviceAddrs []string, name string) {
-	conn, err := grpc.NewClient(
-		serviceAddrs[0],
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+func callSayHelloWithCircuitBreaker(name string, cb *circuitbreaker.CircuitBreaker, clientBalancer balancer.Balancer) {
+	targetAddress, err := clientBalancer.Next(name)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("client balancer next failed: %v", err)
 	}
-	defer conn.Close()
 
-	c := pb.NewHelloServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	r, err := c.SayHello(ctx, &pb.HelloRequest{
-		Name: name,
-	})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Greeting: %s", r.Message)
-}
-
-func callSayHelloWithCircuitBreaker(serviceAddrs []string, name string, cb *circuitbreaker.CircuitBreaker) {
 	conn, err := grpc.NewClient(
-		serviceAddrs[0],
+		targetAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -88,11 +71,10 @@ func getServiceAddresses() []string {
 
 func main() {
 	serviceAddrs := getServiceAddresses()
-	callSayHello(serviceAddrs, "Harvey")
-
+	var clientBalancer = balancer.NewConsistentHashBalancer(serviceAddrs, 128)
 	cb := circuitbreaker.NewCircuitBreaker(5, 10*time.Second)
 	for i := 0; i < 20; i++ {
-		callSayHelloWithCircuitBreaker(serviceAddrs, "Harvey Breaker", cb)
+		callSayHelloWithCircuitBreaker("Harvey Breaker", cb, clientBalancer)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
