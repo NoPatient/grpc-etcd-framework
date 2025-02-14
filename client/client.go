@@ -71,8 +71,7 @@ func getServiceAddresses() []string {
 
 func main() {
 	serviceAddrs := getServiceAddresses()
-	clientBalancer := balancer.NewConsistentHashBalancer(serviceAddrs)
-
+	var clientBalancer = balancer.NewConsistentHashBalancer(serviceAddrs, 128)
 	cb := circuitbreaker.NewCircuitBreaker(5, 10*time.Second)
 	for i := 0; i < 20; i++ {
 		callSayHelloWithCircuitBreaker("Harvey Breaker", cb, clientBalancer)
