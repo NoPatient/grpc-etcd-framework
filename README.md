@@ -89,3 +89,14 @@ Key concepts of rate limiting:
 * Throttling: The process of rejecting or delaying requests that exceed the allowed rate.
 
 In this project, we use `golang.org/x/time/rate` as the rate limiter directly.
+
+# v1.4.0
+
+Add load balancer for server.
+
+As a distributed gRPC framework, load balancer is essential. We add three types of 
+load balancer in this version, RoundRobin, Random and ConsistentHash.
+
+As for ConsistentHash, we use the package named 'github.com/stathat/consistent'. 
+This package can help us create a hash ring simply and evenly distribute all servers
+by adding some virtual nodes.
