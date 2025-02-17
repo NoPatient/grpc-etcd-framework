@@ -6,5 +6,5 @@ const (
 
 const (
 	ServiceName             = "MyService"
-	ServiceLimiterThreshold = 5
+	ServiceLimiterThreshold = 10
 )
