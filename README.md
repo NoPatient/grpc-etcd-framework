@@ -100,3 +100,12 @@ load balancer in this version, RoundRobin, Random and ConsistentHash.
 As for ConsistentHash, we use the package named 'github.com/stathat/consistent'. 
 This package can help us create a hash ring simply and evenly distribute all servers
 by adding some virtual nodes.
+
+# v1.5.0
+
+Support dynamic configuration update.
+
+Server uses a goRoutine to watch the configuration path on etcd. 
+ConfigManager struct in Server will get the new configuration at once if the content
+in etcd has been changed. Then transmit the new content to the main process using channel.
+This is a useful feature to make service configuration update without downtime.
